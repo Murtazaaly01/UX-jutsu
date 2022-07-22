@@ -21,13 +21,8 @@ CHANNEL = userge.getCLogger(__name__)
 async def g_promote_(message: Message):
     """global promote"""
     input_ = message.input_str
-    reply_ = message.reply_to_message
-    if reply_:
+    if reply_ := message.reply_to_message:
         user_ = reply_.from_user.id
-        if input_:
-            pass
-        else:
-            pass
     else:
         try:
             userandrank = input_.split()

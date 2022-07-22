@@ -40,10 +40,7 @@ async def broad_toggle_(message: Message):
     """toggle #Broadcast tag"""
     global BROAD_TAGGING
     if "-c" in message.flags:
-        if BROAD_TAGGING:
-            tog = "enabled"
-        else:
-            tog = "disabled"
+        tog = "enabled" if BROAD_TAGGING else "disabled"
         await message.edit(f"Broadcast tag is <b>{tog}</b>.", del_in=3)
         return
     if BROAD_TAGGING:
@@ -77,10 +74,7 @@ async def add_post(message: Message):
         await message.edit(f"`Provided input ({chat_}) is not a chat...`", del_in=5)
         return
     chat_type = chat_.type
-    if chat_type == "private":
-        chat_name = full_name(chat_)
-    else:
-        chat_name = chat_.title
+    chat_name = full_name(chat_) if chat_type == "private" else chat_.title
     chat_id = chat_.id
     found = await POST_LIST.find_one({"chat_id": chat_id})
     if found:
@@ -228,8 +222,7 @@ async def post_(message: Message):
     flags = message.flags
     if not reply_:
         return await message.edit("`Reply to a message...`")
-    no_go = forbidden_sudo(message, reply_.text)
-    if no_go:
+    if no_go := forbidden_sudo(message, reply_.text):
         await message.delete()
         return await CHANNEL.log(
             f"User {message.from_user.mention} tried to use sudo command <b>in forbidden way</b>!!!"
@@ -270,9 +263,20 @@ async def post_(message: Message):
     total = 0
     try:
         async for chats_ in POST_LIST.find():
-            if "-all" in flags:
+            if (
+                "-all" not in flags
+                and "-grp" in flags
+                and chats_["chat_type"] in ["group", "supergroup"]
+                or "-all" not in flags
+                and "-grp" not in flags
+                and "-pvt" in flags
+                and chats_["chat_type"] == "private"
+                or "-all" in flags
+            ):
                 if BROAD_TAGGING:
-                    broad = await userge.send_message(chats_["chat_id"], "#BROADCAST")
+                    broad = await userge.send_message(
+                        chats_["chat_id"], "#BROADCAST"
+                    )
                     broad_id = broad.message_id
                 else:
                     broad_id = None
@@ -283,38 +287,6 @@ async def post_(message: Message):
                     reply_to_message_id=broad_id,
                 )
                 total += 1
-            elif "-grp" in flags:
-                if chats_["chat_type"] in ["group", "supergroup"]:
-                    if BROAD_TAGGING:
-                        broad = await userge.send_message(
-                            chats_["chat_id"], "#BROADCAST"
-                        )
-                        broad_id = broad.message_id
-                    else:
-                        broad_id = None
-                    await userge.copy_message(
-                        chats_["chat_id"],
-                        message.chat.id,
-                        reply_.message_id,
-                        reply_to_message_id=broad_id,
-                    )
-                    total += 1
-            elif "-pvt" in flags:
-                if chats_["chat_type"] == "private":
-                    if BROAD_TAGGING:
-                        broad = await userge.send_message(
-                            chats_["chat_id"], "#BROADCAST"
-                        )
-                        broad_id = broad.message_id
-                    else:
-                        broad_id = None
-                    await userge.copy_message(
-                        chats_["chat_id"],
-                        message.chat.id,
-                        reply_.message_id,
-                        reply_to_message_id=broad_id,
-                    )
-                    total += 1
     except FloodWait as e:
         await asyncio.sleep(e.x + 3)
     except Exception as e:

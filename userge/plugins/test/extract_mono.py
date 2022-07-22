@@ -17,7 +17,5 @@ async def extract_mono(message: Message):
     await message.edit("`Extracting mono text...`")
     text_ = reply_.text.html
     mono_ = re.findall(r"(\<(code|pre)\>(.|\n)*?\<\/\2\>)", text_)
-    out_ = []
-    for one in mono_:
-        out_.append(one[0])
+    out_ = [one[0] for one in mono_]
     await message.edit(out_)

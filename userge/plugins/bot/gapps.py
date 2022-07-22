@@ -48,8 +48,10 @@ if userge.has_bot:
                 "pico",
             ]
             try:
-                for i in varient:
-                    gapps_link.append(r["arm64"]["10.0"]["downloads"][i]["download"])
+                gapps_link.extend(
+                    r["arm64"]["10.0"]["downloads"][i]["download"] for i in varient
+                )
+
             except KeyError:
                 return
             open_g = [

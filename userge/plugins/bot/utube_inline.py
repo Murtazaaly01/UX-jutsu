@@ -247,16 +247,15 @@ if userge.has_bot:
         choosen_btn = c_q.matches[0].group(1)
         data_key = c_q.matches[0].group(2)
         page = c_q.matches[0].group(3)
-        if os.path.exists(PATH):
-            with open(PATH) as f:
-                view_data = ujson.load(f)
-            search_data = view_data.get(data_key)
-            total = len(search_data)
-        else:
+        if not os.path.exists(PATH):
             return await c_q.answer(
                 "Search data doesn't exists anymore, please perform search again ...",
                 show_alert=True,
             )
+        with open(PATH) as f:
+            view_data = ujson.load(f)
+        search_data = view_data.get(data_key)
+        total = len(search_data)
         if choosen_btn == "back":
             index = int(page) - 1
             del_back = index == 1
@@ -299,9 +298,10 @@ if userge.has_bot:
             )
         elif choosen_btn == "listall":
             await c_q.answer("View Changed to:  📜  List", show_alert=False)
-            list_res = ""
-            for vid_s in search_data:
-                list_res += search_data.get(vid_s).get("list_view")
+            list_res = "".join(
+                search_data.get(vid_s).get("list_view") for vid_s in search_data
+            )
+
             telegraph = post_to_telegraph(
                 a_title=f"Showing {total} youtube video results for the given query ...",
                 content=list_res,
@@ -415,9 +415,7 @@ def _mp3Dl(url: str, starttime, uid: str):
 
 
 def get_yt_video_id(url: str):
-    # https://regex101.com/r/c06cbV/1
-    match = YOUTUBE_REGEX.search(url)
-    if match:
+    if match := YOUTUBE_REGEX.search(url):
         return match.group(1)
 
 
@@ -427,21 +425,22 @@ def get_choice_by_id(choice_id, media_type: str):
         # default format selection
         choice_str = "bestvideo+bestaudio/best"
         disp_str = "best(video+audio)"
+    elif choice_id == "mp3":
+        choice_str = "320"
+        disp_str = "320 Kbps"
     elif choice_id == "mp4":
         # Download best Webm / Mp4 format available or any other best if no mp4
         # available
         choice_str = "bestvideo[ext=webm]+251/bestvideo[ext=mp4]+(258/256/140/bestaudio[ext=m4a])/bestvideo[ext=webm]+(250/249)/best"
         disp_str = "best(video+audio)[webm/mp4]"
-    elif choice_id == "mp3":
-        choice_str = "320"
-        disp_str = "320 Kbps"
     else:
         disp_str = str(choice_id)
-        if media_type == "v":
-            # mp4 video quality + best compatible audio
-            choice_str = disp_str + "+(258/256/140/bestaudio[ext=m4a])/best"
-        else:  # Audio
-            choice_str = disp_str
+        choice_str = (
+            f"{disp_str}+(258/256/140/bestaudio[ext=m4a])/best"
+            if media_type == "v"
+            else disp_str
+        )
+
     return choice_str, disp_str
 
 
@@ -453,9 +452,8 @@ async def result_formatter(results: list):
         title = f'<a href={r.get("link")}><b>{r.get("title")}</b></a>\n'
         out = title
         if r.get("descriptionSnippet"):
-            out += "<code>{}</code>\n\n".format(
-                "".join(x.get("text") for x in r.get("descriptionSnippet"))
-            )
+            out += f'<code>{"".join((x.get("text") for x in r.get("descriptionSnippet")))}</code>\n\n'
+
         out += f'<b>❯  Duration:</b> {r.get("accessibility").get("duration")}\n'
         views = f'<b>❯  Views:</b> {r.get("viewCount").get("short")}\n'
         out += views
@@ -535,7 +533,7 @@ def download_button(vid: str, body: bool = False):
         fr_size = video.get("filesize")
         if video.get("ext") == "mp4":
             for frmt_ in qual_list:
-                if fr_note in (frmt_, frmt_ + "60"):
+                if fr_note in (frmt_, f"{frmt_}60"):
                     qual_dict[frmt_][fr_id] = fr_size
         if video.get("acodec") != "none":
             bitrrate = int(video.get("abr", 0))

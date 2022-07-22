@@ -45,7 +45,7 @@ async def ivote_(message: Message):
 async def vote_callback(_, c_q: CallbackQuery):
     try:
         id_ = (c_q.data).split("_")[-1]
-        anon = True if "anon" in c_q.data else False
+        anon = "anon" in c_q.data
         found = await VOTE.find_one({"_id": f"vote_{id_}"})
         if not found:
             await VOTE.insert_one(

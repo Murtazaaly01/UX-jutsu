@@ -100,15 +100,13 @@ async def set_alive_media(message: Message):
 @userge.on_cmd("alive", about={"header": "Just For Fun"}, allow_channels=False)
 async def alive_inline(message: Message):
     try:
-        if message.client.is_bot:
+        if message.client.is_bot or not userge.has_bot:
             await send_alive_message(message)
-        elif userge.has_bot:
+        else:
             try:
                 await send_inline_alive(message)
             except BadRequest:
                 await send_alive_message(message)
-        else:
-            await send_alive_message(message)
     except Exception as e_all:
         await message.err(str(e_all), del_in=10, log=__name__)
 
@@ -235,9 +233,7 @@ if userge.has_bot:
             except BadRequest:
                 pass
             ping = "𝗣𝗶𝗻𝗴:  🏓  {} sec\n"
-        alive_s = "➕ 𝗘𝘅𝘁𝗿𝗮 𝗣𝗹𝘂𝗴𝗶𝗻𝘀 : {}\n".format(
-            _parse_arg(Config.LOAD_UNOFFICIAL_PLUGINS)
-        )
+        alive_s = f"➕ 𝗘𝘅𝘁𝗿𝗮 𝗣𝗹𝘂𝗴𝗶𝗻𝘀 : {_parse_arg(Config.LOAD_UNOFFICIAL_PLUGINS)}\n"
         alive_s += f"👥 𝗦𝘂𝗱𝗼 : {_parse_arg(Config.SUDO_ENABLED)}\n"
         alive_s += f"🚨 𝗔𝗻𝘁𝗶𝘀𝗽𝗮𝗺 : {_parse_arg(Config.ANTISPAM_SENTRY)}\n"
         if Config.HEROKU_APP and Config.RUN_DYNO_SAVER:
@@ -273,7 +269,7 @@ class Bot_Alive:
         else:
             link_type = "tg_media"
             if match.group(2) == "c":
-                chat_id = int("-100" + str(match.group(3)))
+                chat_id = int(f"-100{str(match.group(3))}")
                 message_id = match.group(4)
             else:
                 chat_id = match.group(2)
@@ -284,7 +280,7 @@ class Bot_Alive:
     @staticmethod
     def alive_info(me):
         u_name = " ".join([me.first_name, me.last_name or ""])
-        alive_info = f"""
+        return f"""
 ­<a href="https://t.me/xplugin"><b>𝐕𝐄𝐍𝐎𝐌</a> is spreading.</b>
 
   🐍   <b>Python      :</b>    <code>v{versions.__python_version__}</code>
@@ -293,15 +289,12 @@ class Bot_Alive:
   👤   <b>User          :</b>    <code>{u_name}</code>
   <b>{Bot_Alive._get_mode()}</b>        <code>|</code>    🕔  <b>{userge.uptime}</b>
 """
-        return alive_info
 
     @staticmethod
     def _get_mode() -> str:
         if RawClient.DUAL_MODE:
             return "↕️   DUAL"
-        if Config.BOT_TOKEN:
-            return "🤖  BOT"
-        return "👤  USER"
+        return "🤖  BOT" if Config.BOT_TOKEN else "👤  USER"
 
     @staticmethod
     def alive_buttons() -> InlineKeyboardMarkup:
@@ -335,4 +328,4 @@ class Bot_Alive:
 
     @staticmethod
     def is_photo(file_id: str) -> bool:
-        return bool(FileId.decode(file_id).file_type in PHOTO_TYPES)
+        return FileId.decode(file_id).file_type in PHOTO_TYPES

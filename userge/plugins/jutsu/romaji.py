@@ -30,8 +30,7 @@ translator = google_translator()
 async def romaji_(message: Message):
     x = message.filtered_input_str
     if not x:
-        reply = message.reply_to_message
-        if reply:
+        if reply := message.reply_to_message:
             x = message.reply_to_message.text or message.reply_to_message.caption
         else:
             await message.edit("`No input found...`")
@@ -61,22 +60,21 @@ async def romaji_(message: Message):
                 return
         else:
             no_f = True
+    elif len(flags) > 2:
+        await message.edit("Maximum two language flags supported...", del_in=5)
+        return
+    elif len(flags) == 2:
+        src = list(flags)[0]
+        dest = list(flags)[1]
+    elif len(flags) == 1:
+        src = "auto"
+        dest = list(flags)[0]
     else:
-        if len(flags) > 2:
-            await message.edit("Maximum two language flags supported...", del_in=5)
-            return
-        elif len(flags) == 2:
-            src = list(flags)[0]
-            dest = list(flags)[1]
-        elif len(flags) == 1:
-            src = "auto"
-            dest = list(flags)[0]
-        else:
-            no_f = True
+        no_f = True
     if not secret:
         await message.edit("Transcribing...")
-    src = src.replace("-", "") if not no_f else False
-    dest = dest.replace("-", "") if not no_f else False
+    src = False if no_f else src.replace("-", "")
+    dest = False if no_f else dest.replace("-", "")
     if src and dest:
         try:
             tran = await _translate_this(x, dest, src)
@@ -127,8 +125,5 @@ async def romaji_(message: Message):
         .replace("]", "")
     )
     rom = rom.strip()
-    if secret:
-        out += rom
-    else:
-        out += f"<code>{rom}</code>"
+    out += rom if secret else f"<code>{rom}</code>"
     await message.edit(out)

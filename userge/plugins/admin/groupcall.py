@@ -35,7 +35,8 @@ def check_vc_perm(func):
     async def vc_perm(m: Message):
         if (
             m.chat.type in ["group", "supergroup"]
-            and not (m.from_user.is_deleted or m.from_user.is_bot)
+            and not m.from_user.is_deleted
+            and not m.from_user.is_bot
             and m.from_user.is_self
             and getattr(
                 (await m.chat.get_member(m.from_user.id)),
@@ -169,8 +170,7 @@ async def vcinfo_(message: Message):
     if not (group_call := (await get_group_call(message))):
         return
     gc_data = await userge.send(GetGroupCall(call=group_call))
-    gc_info = {}
-    gc_info["ℹ️ INFO"] = clean_obj(gc_data.call, convert=True)
+    gc_info = {"ℹ️ INFO": clean_obj(gc_data.call, convert=True)}
     if len(gc_data.users) != 0:
         if "-d" in message.flags:
             gc_info["👥 Participants"] = [
@@ -314,7 +314,7 @@ async def append_peer_user(user_ids: List, limit: int = None) -> Optional[List]:
         else:
             if isinstance(peer_, InputPeerUser):
                 peer_list.append(peer_)
-    if len(peer_list) != 0:
+    if peer_list:
         return sample(peer_list, min(len(peer_list), limit)) if limit else peer_list
 
 

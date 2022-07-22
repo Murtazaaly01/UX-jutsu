@@ -33,6 +33,8 @@ _LOG = logging.getLogger(__name__)
 logbot.reply_last_msg("Setting Configs ...")
 
 
+
+
 class Config:
     """Configs to setup USERGE-X"""
 
@@ -79,7 +81,7 @@ class Config:
     HEROKU_APP_NAME = os.environ.get("HEROKU_APP_NAME")
     G_DRIVE_IS_TD = os.environ.get("G_DRIVE_IS_TD") == "true"
     LOAD_UNOFFICIAL_PLUGINS = os.environ.get("LOAD_UNOFFICIAL_PLUGINS") == "true"
-    THUMB_PATH = DOWN_PATH + "thumb_image.jpg"
+    THUMB_PATH = f"{DOWN_PATH}thumb_image.jpg"
     TMP_PATH = "userge/plugins/temp/"
     MAX_MESSAGE_LENGTH = 4096
     MSG_DELETE_TIMEOUT = 120
@@ -138,13 +140,12 @@ def get_version() -> str:
         return Config.HBOT_VERSION
     try:
         if "/code-rgb/userge-x" in Config.UPSTREAM_REPO.lower():
-            diff = list(_REPO.iter_commits(f"v{ver}..HEAD"))
-            if diff:
+            if diff := list(_REPO.iter_commits(f"v{ver}..HEAD")):
                 ver = f"{ver}|VULCAN.{len(diff)}"
-        else:
-            diff = list(_REPO.iter_commits(f"{Config.UPSTREAM_REMOTE}/alpha..HEAD"))
-            if diff:
-                ver = f"{ver}|fork-[X].{len(diff)}"
+        elif diff := list(
+            _REPO.iter_commits(f"{Config.UPSTREAM_REMOTE}/alpha..HEAD")
+        ):
+            ver = f"{ver}|fork-[X].{len(diff)}"
         branch = f"@{_REPO.active_branch.name}"
     except Exception as err:
         _LOG.error(err)
@@ -163,14 +164,14 @@ def hbot_version(tag: str) -> str:
         with Session() as req:
             try:
                 if (
-                    r_com := req.get(g_api + f"/compare/v{tag}...HEAD")
+                    r_com := req.get(f"{g_api}/compare/v{tag}...HEAD")
                 ).status_code == 200:
                     rcom = r_com.json()
                     if commits := rcom.get("total_commits"):
                         commits = f".{commits}"
                     branch = rcom.get("target_commitish")
                 if (
-                    r_name := req.get(g_api + f"/releases/tags/v{tag}")
+                    r_name := req.get(f"{g_api}/releases/tags/v{tag}")
                 ).status_code == 200:
                     tag_name = (r_name.json().get("name") or "").replace(" ", "-")
             except JSONDecodeError:

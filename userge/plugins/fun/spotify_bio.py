@@ -68,7 +68,7 @@ class Database:
         self.save()
 
     def save_spam(self, which, what):
-        self.db[which + "_spam"] = what
+        self.db[f"{which}_spam"] = what
 
     def return_token(self):
         return self.db["access_token"]
@@ -80,7 +80,7 @@ class Database:
         return self.db["bio"]
 
     def return_spam(self, which):
-        return self.db[which + "_spam"]
+        return self.db[f"{which}_spam"]
 
     def save(self):
         with open(PATH_, "w") as outfile:
@@ -94,10 +94,10 @@ def ms_converter(millis):
     if str(seconds) == "0":
         seconds = "00"
     if len(str(seconds)) == 1:
-        seconds = "0" + str(seconds)
+        seconds = f"0{str(seconds)}"
     minutes = (millis / (1000 * 60)) % 60
     minutes = int(minutes)
-    return str(minutes) + ":" + str(seconds)
+    return f"{minutes}:{str(seconds)}"
 
 
 async def get_auth_():
@@ -180,21 +180,20 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
             Config.SPOTIFY_MODE = bool(data_["is_active"])
         if os.path.exists(PATH_):
             SP_DATABASE = Database()
-        else:
-            if db_ := await SPOTIFY_DB.find_one({"_id": "database"}):
-                access_token = db_.get("access_token")
-                refresh_token = db_.get("refresh_token")
-                if access_token and refresh_token:
-                    to_create = {
-                        "bio": "",
-                        "access_token": access_token,
-                        "refresh_token": refresh_token,
-                        "telegram_spam": False,
-                        "spotify_spam": False,
-                    }
-                    with open(PATH_, "w+") as outfile:
-                        ujson.dump(to_create, outfile, indent=4)
-                    SP_DATABASE = Database()
+        elif db_ := await SPOTIFY_DB.find_one({"_id": "database"}):
+            access_token = db_.get("access_token")
+            refresh_token = db_.get("refresh_token")
+            if access_token and refresh_token:
+                to_create = {
+                    "bio": "",
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "telegram_spam": False,
+                    "spotify_spam": False,
+                }
+                with open(PATH_, "w+") as outfile:
+                    ujson.dump(to_create, outfile, indent=4)
+                SP_DATABASE = Database()
 
     # to stop unwanted spam, we sent these type of message only once. So we have a variable in our database which we check
     # for in return_info. When we send a message, we set this variable to true. After a successful update
@@ -203,23 +202,19 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
         # see below why
         # this is if False is inserted, so if spam = False, so if everything is
         # good.
-        if not what:
-            # if it wasn't normal before, we proceed
-            if SP_DATABASE.return_spam(which):
-                # we save that it is normal now
-                SP_DATABASE.save_spam(which, False)
-                # we return True so we can test against it and if it this
-                # function returns, we can send a fitting message
-                return True
-        # this is if True is inserted, so if spam = True, so if something went
-        # wrong
-        else:
+        if what:
             # if it was normal before, we proceed
             if not SP_DATABASE.return_spam(which):
                 # we save that it is not normal now
                 SP_DATABASE.save_spam(which, True)
                 # we return True so we can send a message
                 return True
+        elif SP_DATABASE.return_spam(which):
+            # we save that it is normal now
+            SP_DATABASE.save_spam(which, False)
+            # we return True so we can test against it and if it this
+            # function returns, we can send a fitting message
+            return True
         # if True wasn't returned before, we can return False now so our test
         # fails and we dont send a message
         return False
@@ -230,7 +225,7 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
             # SPOTIFY
             skip = False
             to_insert = {}
-            oauth = {"Authorization": "Bearer " + SP_DATABASE.return_token()}
+            oauth = {"Authorization": f"Bearer {SP_DATABASE.return_token()}"}
             r = requests.get(
                 "https://api.spotify.com/v1/me/player/currently-playing", headers=oauth
             )
@@ -252,16 +247,14 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                             "resolved."
                         )
                         await CHANNEL.log(stringy)
-                else:
-                    if save_spam("spotify", True):
-                        # currently item is not passed when the user plays a
-                        # podcast
-                        string = (
-                            f"**[INFO]**\n\nThe playback {received['currently_playing_type']}"
-                            " didn't gave me any additional information, so I skipped updating the bio."
-                        )
-                        await CHANNEL.log(string)
-            # 429 means flood limit, we need to wait
+                elif save_spam("spotify", True):
+                    # currently item is not passed when the user plays a
+                    # podcast
+                    string = (
+                        f"**[INFO]**\n\nThe playback {received['currently_playing_type']}"
+                        " didn't gave me any additional information, so I skipped updating the bio."
+                    )
+                    await CHANNEL.log(string)
             elif r.status_code == 429:
                 to_wait = r.headers["Retry-After"]
                 LOG_.error(f"Spotify, have to wait for {str(to_wait)}")
@@ -271,8 +264,6 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                 )
                 skip = True
                 await asyncio.sleep(int(to_wait))
-            # 204 means user plays nothing, since to_insert is false, we dont
-            # need to change anything
             elif r.status_code == 204:
                 if save_spam("spotify", False):
                     stringy = (
@@ -280,7 +271,6 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                         "resolved."
                     )
                     await CHANNEL.log(stringy)
-            # 401 means our access token is expired, so we need to refresh it
             elif r.status_code == 401:
                 data = {
                     "client_id": Config.SPOTIFY_CLIENT_ID,
@@ -309,9 +299,6 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                 # since we didnt actually update our status yet, lets do this
                 # without the 30 seconds wait
                 skip = True
-            # 502 means bad gateway, its an issue on spotify site which we can do nothing about. 30 seconds wait shouldn't
-            # put too much pressure on the spotify server, so we are just going
-            # to notify the user once
             elif r.status_code == 502:
                 if save_spam("spotify", True):
                     string = (
@@ -319,9 +306,6 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                         "servers. The bot will continue to run but may not update the bio for a short time."
                     )
                     await CHANNEL.log(string)
-            # 503 means service unavailable, its an issue on spotify site which we can do nothing about. 30 seconds wait
-            # shouldn't put too much pressure on the spotify server, so we are
-            # just going to notify the user once
             elif r.status_code == 503:
                 if save_spam("spotify", True):
                     string = (
@@ -330,13 +314,10 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                         "short time."
                     )
                     await CHANNEL.log(string)
-            # 404 is a spotify error which isn't supposed to happen (since our URL is correct). Track the issue here:
-            # https://github.com/spotify/web-api/issues/1280
             elif r.status_code == 404:
                 if save_spam("spotify", True):
                     string = "**[INFO]**\n\nSpotify returned a 404 error, which is a bug on their side."
                     await CHANNEL.log(string)
-            # catch anything else
             else:
                 await CHANNEL.log(
                     "**[ERROR]**\n\nOK, so something went reeeally wrong with spotify. The bot "
@@ -388,15 +369,11 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                     if new_bio:
                         # test if the user changed his bio to blank, we save it
                         # before we override
-                        if not bio:
-                            SP_DATABASE.save_bio(bio)
-                        # test if the user changed his bio in the meantime, if
-                        # yes, we save it before we override
-                        elif "🎶" not in bio:
+                        if not bio or "🎶" not in bio:
                             SP_DATABASE.save_bio(bio)
                         # test if the bio isn't the same, otherwise updating it
                         # would be stupid
-                        if not new_bio == bio:
+                        if new_bio != bio:
                             try:
                                 await userge.update_profile(bio=new_bio)
                                 spotify_bio_.lrt = time.time()
@@ -419,14 +396,12 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                                     await CHANNEL.log(stringy)
                     # if we dont have a bio, everything was too long, so we
                     # tell the user that
-                    if not new_bio:
-                        if save_spam("telegram", True):
-                            to_send = (
-                                "**[INFO]**\n\nThe current track exceeded the character limit, so the bio wasn't "
-                                f"updated.\n\n Track: {title}\nInterpret: {interpret}"
-                            )
-                            await CHANNEL.log(to_send)
-                # not to_insert means no playback
+                    if not new_bio and save_spam("telegram", True):
+                        to_send = (
+                            "**[INFO]**\n\nThe current track exceeded the character limit, so the bio wasn't "
+                            f"updated.\n\n Track: {title}\nInterpret: {interpret}"
+                        )
+                        await CHANNEL.log(to_send)
                 else:
                     if save_spam("telegram", False):
                         stringy = (
@@ -437,18 +412,10 @@ if Config.SPOTIFY_CLIENT_ID and Config.SPOTIFY_CLIENT_SECRET:
                     old_bio = SP_DATABASE.return_bio()
                     # this means the bio is blank, so we save that as the new
                     # one
-                    if not bio:
+                    if not bio or "🎶" not in bio and bio != old_bio:
                         SP_DATABASE.save_bio(bio)
-                    # this means an old playback is in the bio, so we change it
-                    # back to the original one
                     elif "🎶" in bio:
                         await userge.update_profile(bio=SP_DATABASE.return_bio())
-                    # this means a new original is there, lets save it
-                    elif not bio == old_bio:
-                        SP_DATABASE.save_bio(bio)
-                    # this means the original one we saved is still valid
-                    else:
-                        pass
             except FloodWait as e:
                 to_wait = e.x + 60
                 LOG_.error(f"to wait for {str(to_wait)}")
@@ -514,7 +481,7 @@ async def now_playing_(message: Message):
     """Spotify Now Playing"""
     if not await sp_var_check(message):
         return
-    oauth = {"Authorization": "Bearer " + SP_DATABASE.return_token()}
+    oauth = {"Authorization": f"Bearer {SP_DATABASE.return_token()}"}
     r = requests.get(
         "https://api.spotify.com/v1/me/player/currently-playing", headers=oauth
     )
@@ -531,14 +498,14 @@ async def sp_info_(message: Message):
     if not await sp_var_check(message):
         return
     # =====================================GET_204=====================================================#
-    oauth = {"Authorization": "Bearer " + SP_DATABASE.return_token()}
+    oauth = {"Authorization": f"Bearer {SP_DATABASE.return_token()}"}
     getplay = requests.get(
         "https://api.spotify.com/v1/me/player/currently-playing", headers=oauth
     )
     # =====================================GET_DEVICE_INFO==============================================#
     device = requests.get("https://api.spotify.com/v1/me/player/devices", headers=oauth)
     # =====================================GET_FIVE_RECETLY_PLAYED_SONGS=================================#
-    oauth = {"Authorization": "Bearer " + SP_DATABASE.return_token()}
+    oauth = {"Authorization": f"Bearer {SP_DATABASE.return_token()}"}
     recetly_pl = requests.get(
         "https://api.spotify.com/v1/me/player/recently-played?type=track&limit=5",
         headers=oauth,
@@ -553,7 +520,7 @@ async def sp_info_(message: Message):
             track = for_rec["track"]
             get_name = track["name"]
             with open("status_recent_played_song.txt", "a") as sf:
-                sf.write("• __" + get_name + "__" + "\n")
+                sf.write(f"• __{get_name}__" + "\n")
         with open("status_recent_played_song.txt", "r+") as f:
             recent_p = f.read()
             f.truncate(0)
@@ -580,7 +547,7 @@ async def sp_profile_(message: Message):
     """Spotify Profile"""
     if not await sp_var_check(message):
         return
-    oauth = {"Authorization": "Bearer " + SP_DATABASE.return_token()}
+    oauth = {"Authorization": f"Bearer {SP_DATABASE.return_token()}"}
     me = requests.get("https://api.spotify.com/v1/me", headers=oauth)
     a_me = me.json()
     name = a_me["display_name"]
@@ -601,7 +568,7 @@ async def sp_recents_(message: Message):
     """Spotify Recent Songs"""
     if not await sp_var_check(message):
         return
-    oauth = {"Authorization": "Bearer " + SP_DATABASE.return_token()}
+    oauth = {"Authorization": f"Bearer {SP_DATABASE.return_token()}"}
     await message.edit("`Getting recent played songs...`")
     r = requests.get(
         "https://api.spotify.com/v1/me/player/recently-played", headers=oauth
@@ -614,5 +581,5 @@ async def sp_recents_(message: Message):
         get_name = track["name"]
         ex_link = track["external_urls"]
         get_link = ex_link["spotify"]
-        recent += "• [{}]({})\n".format(get_name, get_link)
+        recent += f"• [{get_name}]({get_link})\n"
     await message.edit(recent, disable_web_page_preview=True)

@@ -15,11 +15,7 @@ from userge import Message, userge
 async def dead_(message: Message):
     """dead or alive"""
     await message.delete()
-    reply_ = message.reply_to_message
-    if reply_:
-        reply_id = reply_.message_id
-    else:
-        reply_id = None
+    reply_id = reply_.message_id if (reply_ := message.reply_to_message) else None
     link_ = "https://telegra.ph/file/55245d8d5cffdd6443994.mp4"
     msg_ = f"""
 <b>DARE TO TEST ME MF.</b>

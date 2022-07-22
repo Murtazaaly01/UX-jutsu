@@ -90,7 +90,6 @@ async def del_tag(message: Message):
     chat_ = message.chat.id
     user_.mention
     full_name(user_)
-    data = []
     found = await CHAT_TAG.find_one({"chat_id": chat_})
     if found:
         if "-chat" in message.flags:
@@ -98,9 +97,7 @@ async def del_tag(message: Message):
             await CHAT_TAG.delete_one(found)
             await message.edit("`Cleared this chat's tag list.`", del_in=5)
             return await CHANNEL.log(f"Cleared <b>{chat_.title}</b>'s tag list.")
-        for one in found["data"]:
-            if one["user_id"] != user_id:
-                data.append(one)
+        data = [one for one in found["data"] if one["user_id"] != user_id]
         await CHAT_TAG.update_one({found}, {"$set": {"data": data}}, upsert=True)
         await message.edit(
             f"Deleted user <b>{user_.first_name}</b> from tag list of chat <b>{message.chat.title}</b>...",
@@ -175,14 +172,12 @@ async def tag_them(message: Message):
     """mention users in the chat's tag list"""
     chat_ = message.chat.id
     chat_ = await userge.get_chat(chat_)
-    list = ""
     found = await CHAT_TAG.find_one({"chat_id": chat_.id})
-    num = 0
     if found:
+        list = ""
         for one in found["data"]:
             mention = f"[{one['name']}](tg://user?id={one['user_id']})"
             list += f"• {mention}\n"
-            num += 1
         await message.delete()
         await message.reply(list)
         await CHANNEL.log(f"Mentioned users in tag list in <b>{chat_.title}</b>...")

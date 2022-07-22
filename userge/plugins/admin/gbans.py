@@ -269,10 +269,7 @@ async def gban_new(message: Message):
     await message.edit(f"GBanning user {mention_html(user_id, user_n)}...")
     me_ = await userge.get_me()
     found = await GBAN_USER_BASE.find_one({"user_id": user_id})
-    if found:
-        gbanned_chats = found["chat_ids"]
-    else:
-        gbanned_chats = []
+    gbanned_chats = found["chat_ids"] if found else []
     failed = ""
     async for dia_ in userge.iter_dialogs():
         try:

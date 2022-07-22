@@ -33,20 +33,18 @@ async def block_ing(message: Message):
     if message.chat.type == "private":
         user_ = message.chat.id
         reason_ = input_
+    elif reply_ := message.replied:
+        user_ = reply_.from_user.id
+        reason_ = input_
     else:
-        reply_ = message.replied
-        if reply_:
-            user_ = reply_.from_user.id
-            reason_ = input_
-        else:
-            split_ = input_.split(" ", 1)
-            user_ = split_[0]
-            try:
-                reason_ = split_[1]
-            except IndexError:
-                return await message.edit(
-                    "`Provide a user_id/username and reason to block.`", del_in=5
-                )
+        split_ = input_.split(" ", 1)
+        user_ = split_[0]
+        try:
+            reason_ = split_[1]
+        except IndexError:
+            return await message.edit(
+                "`Provide a user_id/username and reason to block.`", del_in=5
+            )
     try:
         user_ = await userge.get_users(user_)
     except (PeerIdInvalid, UsernameNotOccupied, UsernameInvalid):
@@ -107,8 +105,7 @@ async def block_ing(message: Message):
 )
 async def unblock_ing(message: Message):
     "unblock user"
-    reply_ = message.replied
-    if reply_:
+    if reply_ := message.replied:
         user_ = reply_.from_user.id
     else:
         user_ = message.input_str
@@ -161,8 +158,6 @@ async def manual_block_unblock(_, update: Update, users: User, chats: Chat):
         elif update.blocked == False:
             Config.BLOCKED_USERS.remove(user_)
             await CHANNEL.log(f"User <b>{user_}</b> unblocked !!!")
-        else:
-            pass
 
 
 @userge.on_cmd(

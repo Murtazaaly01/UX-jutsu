@@ -81,7 +81,7 @@ async def sticklet(message: Message):
 
 
 def find_optimal_wrap(text):
-    chicken_wrap = int(len(text) / 18) or 20
+    chicken_wrap = len(text) // 18 or 20
     wrapped_text = textwrap.wrap(text, width=chicken_wrap)
 
     while len(wrapped_text) * 3 > chicken_wrap:

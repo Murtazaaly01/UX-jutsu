@@ -31,14 +31,14 @@ async def make_tweet(message: Message):
     if not reply_:
         return await message.edit("`Reply to message...`", del_in=5)
     name_ = reply_.from_user.first_name
-    username_ = "@" + reply_.from_user.username
+    username_ = f"@{reply_.from_user.username}"
     pfp_ = reply_.from_user.photo.big_file_id if reply_.from_user.photo else None
     text_ = (
         reply_.text
         if reply_.text and "-f" not in message.flags
         else message.filtered_input_str
     )
-    fake_ = True if "-f" in message.flags else False
+    fake_ = "-f" in message.flags
     bg_ = (26, 43, 60) if "-b" not in message.flags else (0, 0, 0)
     if not text_:
         return await message.edit("`Text not found...`", del_in=5)
@@ -106,7 +106,7 @@ async def make_quote(message: Message):
     name_ = reply_.from_user.first_name
     pfp_ = reply_.from_user.photo.big_file_id if reply_.from_user.photo else None
     text_ = reply_.text if "-f" not in message.flags else message.filtered_input_str
-    fake_ = True if "-f" in message.flags else False
+    fake_ = "-f" in message.flags
     if not text_:
         return await message.edit("`Text not found...`", del_in=5)
     await message.edit("`Making quote...`")

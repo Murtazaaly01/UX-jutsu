@@ -120,13 +120,6 @@ async def text_pdf(message: Message):
         text = f"{file.split('.')[0]} page {input_}.txt"
         with open(text, "w") as t:
             t.write(str)
-        await userge.send_document(
-            message.chat.id,
-            text,
-            reply_to_message_id=reply.message_id,
-        )
-        os.remove(text)
-        os.remove(file)
     else:
         page = int(input_) - 1
         file = await userge.download_media(reply)
@@ -135,13 +128,13 @@ async def text_pdf(message: Message):
         text = f"{file.split('.')[0]} Page-{input_}.txt"
         with open(text, "w") as t:
             t.write(str_)
-        await userge.send_document(
-            message.chat.id,
-            text,
-            reply_to_message_id=reply.message_id,
-        )
-        os.remove(text)
-        os.remove(file)
+    await userge.send_document(
+        message.chat.id,
+        text,
+        reply_to_message_id=reply.message_id,
+    )
+    os.remove(text)
+    os.remove(file)
     await edt.delete()
 
 
@@ -170,7 +163,7 @@ async def scan_pdf(message: Message):
     ratio = image.shape[0] / 500.0
     image = imutils.resize(image, height=500)
     image_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
-    image_y = np.zeros(image_yuv.shape[0:2], np.uint8)
+    image_y = np.zeros(image_yuv.shape[:2], np.uint8)
     image_y[:, :] = image_yuv[:, :, 0]
     image_blurred = cv2.GaussianBlur(image_y, (3, 3), 0)
     edges = cv2.Canny(image_blurred, 50, 200, apertureSize=3)
@@ -236,7 +229,7 @@ async def save_pdf(message: Message):
         ratio = image.shape[0] / 500.0
         image = imutils.resize(image, height=500)
         image_yuv = cv2.cvtColor(image, cv2.COLOR_BGR2YUV)
-        image_y = np.zeros(image_yuv.shape[0:2], np.uint8)
+        image_y = np.zeros(image_yuv.shape[:2], np.uint8)
         image_y[:, :] = image_yuv[:, :, 0]
         image_blurred = cv2.GaussianBlur(image_y, (3, 3), 0)
         edges = cv2.Canny(image_blurred, 50, 200, apertureSize=3)
@@ -314,10 +307,7 @@ async def send_pdf(message: Message):
         return
     msg = message.input_str
     await message.edit("Merging image/pdf(s)...", del_in=5)
-    if msg:
-        name_ = f"{msg}.pdf"
-    else:
-        name_ = "My_PDF.pdf"
+    name_ = f"{msg}.pdf" if msg else "My_PDF.pdf"
     merger = PdfFileMerger()
     for item in os.listdir(f"{Config.DOWN_PATH}/pdf_merge/"):
         if item.endswith("pdf"):

@@ -16,8 +16,7 @@ async def media_info_(message: Message):
     if not reply_.media:
         return await message.edit("`Reply to media...`", del_in=5)
     down_ = await reply_.download()
-    info_ = Media_Info.data(down_)
-    if info_:
+    if info_ := Media_Info.data(down_):
         fps_ = f"{info_['frame_rate']} FPS" if info_["frame_rate"] else None
         out_ = f"""
 <b><u>Media Info of the replied media.</u></b>

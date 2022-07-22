@@ -71,18 +71,17 @@ if userge.has_bot:
             data[str(opinion_id)] = view_data
             with open(PATH, "w") as outfile:
                 ujson.dump(data, outfile)
-        else:
-            if len(view_data) == 1:
-                # Answering Query First then moving forward
-                choice = _choice(counter)
-                await c_q.answer(f"You Choose  {choice}", show_alert=False)
-                if counter == "y":
-                    view_data = [{ids: "y"}, {"agree": 1, "disagree": 0}]
-                if counter == "n":
-                    view_data = [{ids: "n"}, {"agree": 0, "disagree": 1}]
-                data[str(opinion_id)] = view_data
-                with open(PATH, "w") as outfile:
-                    ujson.dump(data, outfile)
+        elif len(view_data) == 1:
+            # Answering Query First then moving forward
+            choice = _choice(counter)
+            await c_q.answer(f"You Choose  {choice}", show_alert=False)
+            if counter == "y":
+                view_data = [{ids: "y"}, {"agree": 1, "disagree": 0}]
+            if counter == "n":
+                view_data = [{ids: "n"}, {"agree": 0, "disagree": 1}]
+            data[str(opinion_id)] = view_data
+            with open(PATH, "w") as outfile:
+                ujson.dump(data, outfile)
         agree_data += f"  {view_data[1]['agree']}"
         disagree_data += f"  {view_data[1]['disagree']}"
         opinion_data = [

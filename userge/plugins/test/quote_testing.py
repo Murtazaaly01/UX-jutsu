@@ -76,7 +76,7 @@ async def q_pic(message: Message):
                 ).content
             )
     text = "\n".join(wrap(input_str, 25))
-    text = "“" + text + "„"
+    text = f"“{text}„"
     font = ImageFont.truetype(FONT_FILE_TO_USE, 50)
     img = Image.open(pfp_)
     if "-b" in message.flags:

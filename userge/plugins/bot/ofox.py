@@ -42,8 +42,7 @@ async def ofox_(message: Message):
     recovery += f"<code>{s['changelog']}</code>\n\n"
     msg = info
     msg += recovery
-    notes_ = s.get("notes")
-    if notes_:
+    if notes_ := s.get("notes"):
         notes = t.post(title="READ Notes", author="", text=notes_)
         msg += f"🗒️ <a href={notes['url']}>NOTES</a>\n"
     msg += f"⬇️ <a href={s['url']}>DOWNLOAD</a>"

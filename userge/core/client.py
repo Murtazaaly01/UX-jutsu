@@ -48,9 +48,7 @@ class _AbstractUserge(Methods, RawClient):
     @property
     def is_bot(self) -> bool:
         """ returns client is bot or not """
-        if self._bot is not None:
-            return hasattr(self, 'ubot')
-        return bool(Config.BOT_TOKEN)
+        return bool(Config.BOT_TOKEN) if self._bot is None else hasattr(self, 'ubot')
 
     @property
     def uptime(self) -> str:
@@ -70,10 +68,8 @@ class _AbstractUserge(Methods, RawClient):
             _IMPORTED[-1] = importlib.reload(_IMPORTED[-1])
         plg = _IMPORTED[-1]
         self.manager.update_plugin(plg.__name__, plg.__doc__)
-        if hasattr(plg, '_init'):
-            # pylint: disable=protected-access
-            if asyncio.iscoroutinefunction(plg._init):
-                _INIT_TASKS.append(self.loop.create_task(plg._init()))
+        if hasattr(plg, '_init') and asyncio.iscoroutinefunction(plg._init):
+            _INIT_TASKS.append(self.loop.create_task(plg._init()))
         _LOG.debug(_LOG_STR, f"Imported {_IMPORTED[-1].__name__} Plugin Successfully")
 
     async def _load_plugins(self) -> None:

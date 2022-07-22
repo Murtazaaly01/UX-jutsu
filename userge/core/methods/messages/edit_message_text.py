@@ -86,7 +86,7 @@ class EditMessageText(RawClient):  # pylint: disable=missing-class-docstring
             RPCError: In case of a Telegram RPC error.
         """
         if text and chat_id not in Config.AUTH_CHATS:
-            text = secure_text(str(text))
+            text = secure_text(text)
         msg = await super().edit_message_text(chat_id=chat_id,
                                               message_id=message_id,
                                               text=text,

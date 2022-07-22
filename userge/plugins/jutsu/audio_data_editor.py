@@ -62,11 +62,10 @@ async def album_edt(message: Message):
         return
     if "-t" in flag_:
         title = input_
+    elif "/" in input_:
+        album_art = input_
     else:
-        if "/" in input_:
-            album_art = input_
-        else:
-            performer = input_
+        performer = input_
     try:
         await userge.send_audio(
             chat_, file_, thumb=album_art, performer=performer, title=title

@@ -28,10 +28,7 @@ SAVED_SETTINGS = get_collection("CONFIGS")
 
 async def _init() -> None:
     found = await SAVED_SETTINGS.find_one({"_id": "LOG_KANG"})
-    if found:
-        Config.LOG_KANG = found["switch"]
-    else:
-        Config.LOG_KANG = True
+    Config.LOG_KANG = found["switch"] if found else True
 
 
 @userge.on_cmd(
@@ -112,15 +109,15 @@ async def kang_(message: Message):
         elif replied.document and "video" in replied.document.mime_type:
             resize = True
             is_video = True
-            ff_vid = True if "-f" in message.flags else False
+            ff_vid = "-f" in message.flags
         elif replied.animation:
             resize = True
             is_video = True
-            ff_vid = True if "-f" in message.flags else False
+            ff_vid = "-f" in message.flags
         elif replied.video:
             resize = True
             is_video = True
-            ff_vid = True if "-f" in message.flags else False
+            ff_vid = "-f" in message.flags
         elif replied.sticker:
             if not replied.sticker.file_name:
                 await kang_msg.edit("`Sticker has no Name!`")
@@ -133,7 +130,7 @@ async def kang_(message: Message):
                 or replied.sticker.file_name.endswith(".webm")
             ):
                 resize = True
-                ff_vid = True if "-f" in message.flags else False
+                ff_vid = "-f" in message.flags
         else:
             await kang_msg.edit("`Unsupported File!`")
             return
@@ -163,7 +160,7 @@ async def kang_(message: Message):
             emoji_ = "🤔"
 
         u_name = user.username
-        u_name = "@" + u_name if u_name else user.first_name or user.id
+        u_name = f"@{u_name}" if u_name else user.first_name or user.id
         packname = f"a{user.id}_by_{user.username}_{pack}"
         custom_packnick = Config.CUSTOM_PACK_NAME or f"{u_name}'s kang pack"
         packnick = f"{custom_packnick} vol.{pack}"
@@ -354,14 +351,11 @@ async def resize_photo(media: str, video: bool, fast_forward: bool) -> str:
             height, width = -1, 512
 
         resized_video = f"{media}.webm"
-        if fast_forward:
-            if s > 3:
-                fract_ = 3 / s
-                ff_f = round(fract_, 2)
-                set_pts_ = ff_f - 0.01 if ff_f > fract_ else ff_f
-                cmd_f = f"-filter:v 'setpts={set_pts_}*PTS',scale={width}:{height}"
-            else:
-                cmd_f = f"-filter:v scale={width}:{height}"
+        if fast_forward and s > 3:
+            fract_ = 3 / s
+            ff_f = round(fract_, 2)
+            set_pts_ = ff_f - 0.01 if ff_f > fract_ else ff_f
+            cmd_f = f"-filter:v 'setpts={set_pts_}*PTS',scale={width}:{height}"
         else:
             cmd_f = f"-filter:v scale={width}:{height}"
         fps_ = float(info_["frame_rate"])

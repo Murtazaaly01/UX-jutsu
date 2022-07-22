@@ -43,10 +43,8 @@ async def report_(message: Message):
         try:
             chat_id = link_.split("/")[-2]
             if chat_id.isdigit():
-                chat_id = "-100" + str(chat_id)
+                chat_id = f"-100{str(chat_id)}"
                 chat_id = int(chat_id)
-            else:
-                pass
             msg_id = link_.split("/")[-1]
         except BaseException:
             await message.edit(

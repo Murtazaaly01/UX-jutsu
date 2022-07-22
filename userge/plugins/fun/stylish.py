@@ -1,5 +1,6 @@
 """Module to style text"""
 
+
 # https://github.com/code-rgb/OUB-X/.../userbot/modules/weebify.py
 # Credits for original weebify - Saitama Bot, @kirito6969, @PhycoNinja13b
 # Improved version of a OUB-X module
@@ -7,6 +8,8 @@
 
 from userge import Message, userge
 from userge.utils import rand_array
+
+
 
 
 class Styled:
@@ -36,7 +39,7 @@ class Styled:
         "weeeb": "丹日亡句ヨ乍呂廾工勹片し冊几回尸甲尺己卞凵レ山メと乙" "丹日亡句ヨ乍呂廾工勹片し冊几回尸甲尺己卞凵レ山メと乙",
     }
     font_choice = list(all_fonts)
-    font_flags = ["-" + _ for _ in font_choice]
+    font_flags = [f"-{_}" for _ in font_choice]
     normal = list("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
 

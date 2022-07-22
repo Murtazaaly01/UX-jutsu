@@ -303,7 +303,7 @@ async def add_sudo_cmd(message: Message):
             t_c = c_d.lstrip(Config.CMD_TRIGGER)
             if "-all" in message.flags:
                 mode_ = "all"
-                if not (t_c in blocked_cmd):
+                if t_c not in blocked_cmd:
                     tmp_.append({"_id": t_c})
                     Config.ALLOWED_COMMANDS.add(t_c)
         await asyncio.gather(

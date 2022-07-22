@@ -56,12 +56,10 @@ SPOILER_DB = Spoiler_DB()
     check_downpath=True,
 )
 async def spoiler_alert_(message: Message):
-    content = message.input_str
     reply = message.reply_to_message
-    if reply and reply.text:
-        content = reply.text.html
-    content = "{}".format(content or "")
-    if not (content or (reply and reply.media)):
+    content = reply.text.html if reply and reply.text else message.input_str
+    content = f'{content or ""}'
+    if not content and (not reply or not reply.media):
         await message.err("No Content Found!")
         return
     rnd_hex = uuid1().hex
@@ -70,27 +68,28 @@ async def spoiler_alert_(message: Message):
     bot_name = (await userge.bot.get_me()).username
     link = f"https://t.me/{bot_name}?start={rnd_id}"
     buttons = None
-    text_ = "<b>{} Shared A Spoiler</b> !\n[<b>Click To View</b>]({})".format(
-        mention_html(message.from_user.id, message.from_user.first_name), link
-    )
+    text_ = f"<b>{mention_html(message.from_user.id, message.from_user.first_name)} Shared A Spoiler</b> !\n[<b>Click To View</b>]({link})"
+
     if message.client.is_bot:
         buttons = InlineKeyboardMarkup(
             [
                 [
                     InlineKeyboardButton(
-                        "Button", callback_data="getl{}".format(rnd_id)
+                        "Button", callback_data=f"getl{rnd_id}"
                     ),
                     InlineKeyboardButton(
-                        "Text Link", callback_data="nobtnspoiler{}".format(rnd_id)
+                        "Text Link", callback_data=f"nobtnspoiler{rnd_id}"
                     ),
                 ],
                 [
                     InlineKeyboardButton(
-                        "Via Inline", switch_inline_query=rnd_id.replace("_", " ")
+                        "Via Inline",
+                        switch_inline_query=rnd_id.replace("_", " "),
                     )
                 ],
             ]
         )
+
         text_ = "<b><u>Choose How You Want to Share the Spoiler.</b></u>"
     await message.edit(text_, reply_markup=buttons, disable_web_page_preview=True)
 
@@ -172,10 +171,9 @@ if userge.has_bot:
         url = f"https://t.me/{bot_name}?start={c_q.matches[0].group(1)}"
         try:
             await c_q.edit_message_text(
-                "<b>{} Shared A Spoiler</b> !\n[<b>Click To View</b>]({})".format(
-                    mention_html(u_id, u_name), url
-                ),
+                f"<b>{mention_html(u_id, u_name)} Shared A Spoiler</b> !\n[<b>Click To View</b>]({url})",
                 disable_web_page_preview=True,
             )
+
         except MessageNotModified:
             pass

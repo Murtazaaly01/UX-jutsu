@@ -36,11 +36,7 @@ async def flac_bot(message: Message):
         )
     except IndexError:
         return await message.edit("`Couldn't find the song...`", del_in=5)
-    reply_ = message.reply_to_message
-    if reply_:
-        reply_to = reply_.message_id
-    else:
-        reply_to = None
+    reply_to = reply_.message_id if (reply_ := message.reply_to_message) else None
     try:
         await userge.copy_message(
             chat_id=bot_,
@@ -99,25 +95,16 @@ async def flac_quality(message: Message):
             del_in=5,
         )
     if input_ == "flac":
-        if "-r" in message.flags:
-            q_ = 1
-        else:
-            q_ = 0
+        q_ = 1 if "-r" in message.flags else 0
         quality = "FLAC"
     elif input_ == "320":
-        if "-r" in message.flags:
-            q_ = 0
-        else:
-            q_ = 1
+        q_ = 0 if "-r" in message.flags else 1
         quality = "MP3_320"
     elif input_ == "256" and "-r" not in message.flags:
         q_ = 2
         quality = "MP3_256"
     elif input_ == "128":
-        if "-r" in message.flags:
-            q_ = 2
-        else:
-            q_ = 3
+        q_ = 2 if "-r" in message.flags else 3
         quality = "MP3_128"
     await message.edit("`Changing quality...`")
     async with userge.conversation(bot_) as conv:

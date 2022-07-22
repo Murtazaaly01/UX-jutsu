@@ -35,7 +35,7 @@ async def fb_leauges_(message: Message):
     try:
         connection = http.client.HTTPConnection("api.football-data.org")
         headers = {"X-Auth-Token": FOOTBALL_API}
-        connection.request("GET", f"/v2/competitions", None, headers)
+        connection.request("GET", "/v2/competitions", None, headers)
         response = json.loads(connection.getresponse().read().decode())
     except Exception as e:
         await message.err(e, del_in=5)
@@ -110,10 +110,7 @@ async def fb_teams_(message: Message):
     season_ = response["season"]
     start_ = (season_["startDate"]).split("-")[0]
     end_ = (season_["endDate"]).split("-")[0][2:]
-    if start_[2:] == end_:
-        start_end = start_
-    else:
-        start_end = f"{start_}/{end_}"
+    start_end = start_ if start_[2:] == end_ else f"{start_}/{end_}"
     lname = response["competition"]["name"]
     nation = response["competition"]["area"]["name"]
     team_list = (
@@ -191,10 +188,7 @@ async def fb_sched_(message: Message):
     season_ = matches_[0]["season"]
     start_ = (season_["startDate"]).split("-")[0]
     end_ = (season_["endDate"]).split("-")[0][2:]
-    if start_[2:] == end_:
-        start_end = start_
-    else:
-        start_end = f"{start_}/{end_}"
+    start_end = start_ if start_[2:] == end_ else f"{start_}/{end_}"
     if matches_[0]["homeTeam"]["id"] == int(id_):
         the_team = matches_[0]["homeTeam"]["name"]
     else:
@@ -219,8 +213,6 @@ async def fb_sched_(message: Message):
             elif h_score < a_score:
                 a_score = f"<b>{a_score}</b>"
                 away_t = f"<b>{away_t}</b>"
-            else:
-                pass
         else:
             finished = False
             h_score = ""
@@ -236,10 +228,7 @@ async def fb_sched_(message: Message):
         time_h = int(time_h)
         time_m = time_.split(":")[1]
         time_m = int(time_m)
-        if FOOTBALL_UTC_TIME:
-            differ = FOOTBALL_UTC_TIME
-        else:
-            differ = "+5:30"
+        differ = FOOTBALL_UTC_TIME or "+5:30"
         t_d_ = time_date_diff(
             year=date_y,
             month=date_m,
@@ -311,10 +300,7 @@ async def fb_fixtures_(message: Message):
         return
     start_ = (season_["startDate"]).split("-")[0]
     end_ = (season_["endDate"]).split("-")[0][2:]
-    if start_[2:] == end_:
-        start_end = start_
-    else:
-        start_end = f"{start_}/{end_}"
+    start_end = start_ if start_[2:] == end_ else f"{start_}/{end_}"
     league_ = response["competition"]["name"]
     country = response["competition"]["area"]["name"]
     try:
@@ -344,8 +330,6 @@ async def fb_fixtures_(message: Message):
                 elif h_score < a_score:
                     a_score = f"<b>{a_score}</b>"
                     away_t = f"<b>{away_t}</b>"
-                else:
-                    pass
             else:
                 finished = False
                 h_score = ""
@@ -361,10 +345,7 @@ async def fb_fixtures_(message: Message):
             time_h = int(time_h)
             time_m = time_.split(":")[1]
             time_m = int(time_m)
-            if FOOTBALL_UTC_TIME:
-                differ = FOOTBALL_UTC_TIME
-            else:
-                differ = "+5:30"
+            differ = FOOTBALL_UTC_TIME or "+5:30"
             t_d_ = time_date_diff(
                 year=date_y,
                 month=date_m,
@@ -407,11 +388,7 @@ async def fb_stand_(message: Message):
             del_in=5,
         )
         return
-    input_ = message.filtered_input_str
-    if input_:
-        league_ = input_.upper()
-    else:
-        league_ = "PL"
+    league_ = input_.upper() if (input_ := message.filtered_input_str) else "PL"
     await message.edit("`Checking league code...`")
 
     try:
@@ -434,21 +411,18 @@ async def fb_stand_(message: Message):
         stand_ = response["standings"]
     except BaseException:
         err = f"The given league code <code>{league_}</code> is wrong, please try again with correct league code...\n"
-        if league_ == "WC" or league_ == "EC":
+        if league_ in ["WC", "EC"]:
             err += "<b>NOTE:</b> <i>WC and EC are not available in this command.</i>"
         await message.edit(err, del_in=5)
         return
     start_ = (season_["startDate"]).split("-")[0]
     end_ = (season_["endDate"]).split("-")[0][2:]
-    if start_[2:] == end_:
-        start_end = start_
-    else:
-        start_end = f"{start_}/{end_}"
+    start_end = start_ if start_[2:] == end_ else f"{start_}/{end_}"
     md = season_["currentMatchday"]
     league_n = response["competition"]["name"]
     country = response["competition"]["area"]["name"]
     standings = f"<b>Standing table</b> for <b>{league_n}</b> ({country}) this season <i>({start_end})</i>: Match day {md}<br><br>"
-    if league_ == "CL" or league_ == "CLI":
+    if league_ in ["CL", "CLI"]:
         stand_ = stand_[2:]
         for tables in stand_:
             tables["stage"]

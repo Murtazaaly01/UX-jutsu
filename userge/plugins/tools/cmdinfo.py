@@ -61,26 +61,26 @@ async def see_info(message: Message):
     if branch == "master":
         branch = "alpha"
     plugin_name = userge.manager.commands[cmd_str].plugin_name
-    plugin_loc = ("/" + userge.manager.plugins[plugin_name].parent).replace(
+    plugin_loc = f"/{userge.manager.plugins[plugin_name].parent}".replace(
         "/plugins", ""
     )
-    if plugin_loc == "/unofficial":
-        unofficial_repo = (
-            "https://github.com/ashwinstr/Userge-Plugins/blob/master/plugins/"
-        )
-        plugin_link = f"{extra_plugins}/{plugin_name}.py"
-    elif plugin_loc == "/custom":
+
+    if plugin_loc == "/custom":
         custom_plugins = Config.CUSTOM_PLUGINS_REPO
         plugin_link = f"{custom_plugins}/blob/master/plugins/{plugin_name}.py"
     elif plugin_loc == "/temp":
         plugin_link = False
+    elif plugin_loc == "/unofficial":
+        unofficial_repo = (
+            "https://github.com/ashwinstr/Userge-Plugins/blob/master/plugins/"
+        )
+        plugin_link = f"{extra_plugins}/{plugin_name}.py"
     elif plugin_loc == "/xtra":
         custom_plugins = "https://github.com/ashwinstr/Userge-Plugins-Fork"
         plugin_link = f"{custom_plugins}/blob/master/plugins/{plugin_name}.py"
     else:
-        plugin_link = "{}/blob/{}/userge/plugins{}/{}.py".format(
-            Config.UPSTREAM_REPO, branch, plugin_loc, plugin_name
-        )
+        plugin_link = f"{Config.UPSTREAM_REPO}/blob/{branch}/userge/plugins{plugin_loc}/{plugin_name}.py"
+
     local_path = f"userge/plugins{plugin_loc}/{plugin_name}.py"
     f_size = humanbytes(os.stat(local_path).st_size)
     search_path = count_lines(local_path, word)
@@ -103,7 +103,7 @@ async def see_info(message: Message):
                 s_result += f"[#L{line}]({plugin_link}#L{line})  "
                 if line_c >= 8:
                     break
-        result += "  <b>{}</b>".format(s_result)
+        result += f"  <b>{s_result}</b>"
     buttons = (
         InlineKeyboardMarkup(
             [[InlineKeyboardButton("📤  Upload", callback_data="plugin_upload")]]
@@ -120,9 +120,12 @@ def count_lines(cmd_path: str, word: str = None):
     if word:
         word = word.strip().lower()
     with open(cmd_path, "r") as f:
-        for num_lines, line in enumerate(f, start=1):
-            if word and word in line.lower():
-                arr.append(num_lines)
+        arr.extend(
+            num_lines
+            for num_lines, line in enumerate(f, start=1)
+            if word and word in line.lower()
+        )
+
     return num_lines, arr
 
 

@@ -91,8 +91,7 @@ if userge.has_bot:
     async def forward_reply(_, message: Message):
         reply = message.reply_to_message
         to_copy = not message.poll
-        user_fwd = reply.forward_from
-        if user_fwd:
+        if user_fwd := reply.forward_from:
             # Incase message is your own forward
             if user_fwd.id in Config.OWNER_ID:
                 return
@@ -236,7 +235,7 @@ if userge.has_bot:
                         await asyncio.sleep(e.x)
         end_ = time()
         b_info = f"🔊  Successfully broadcasted message to ➜  <b>{count} users.</b>"
-        if len(blocked_users) != 0:
+        if blocked_users:
             b_info += f"\n🚫  <b>{len(blocked_users)} users</b> blocked your bot recently, so have been removed."
         b_info += f"\n⏳  <code>Process took: {time_formatter(end_ - start_)}</code>."
         await br_cast.edit(b_info, log=__name__)
@@ -279,9 +278,8 @@ if userge.has_bot:
 
 def extract_content(msg: Message):  # Modified a bound method
     id_reason = msg.matches[0].group(1)
-    replied = msg.reply_to_message
     user_id, reason = None, None
-    if replied:
+    if replied := msg.reply_to_message:
         fwd = replied.forward_from
         if fwd and id_reason:
             user_id = fwd.id
@@ -289,20 +287,19 @@ def extract_content(msg: Message):  # Modified a bound method
         if replied.forward_sender_name and id_reason:
             reason = id_reason
             user_id = BOT_MSGS.search(replied.message_id)
-    else:
-        if id_reason:
-            data = id_reason.split(maxsplit=1)
-            # Grab First Word and Process it.
-            if len(data) == 2:
-                user, reason = data
-            elif len(data) == 1:
-                user = data[0]
-            # if user id, convert it to integer
-            if user.isdigit():
-                user_id = int(user)
-            # User @ Mention.
-            if user.startswith("@"):
-                user_id = user
+    elif id_reason:
+        data = id_reason.split(maxsplit=1)
+        # Grab First Word and Process it.
+        if len(data) == 2:
+            user, reason = data
+        elif len(data) == 1:
+            user = data[0]
+        # if user id, convert it to integer
+        if user.isdigit():
+            user_id = int(user)
+        # User @ Mention.
+        if user.startswith("@"):
+            user_id = user
     return user_id, reason
 
 
@@ -422,8 +419,11 @@ def progress_str(total: int, current: int) -> str:
     prog_arg = "**Progress** : `{}%`\n" "```[{}{}]```"
     return prog_arg.format(
         percentage,
-        "".join((Config.FINISHED_PROGRESS_STR for i in range(floor(percentage / 5)))),
         "".join(
-            (Config.UNFINISHED_PROGRESS_STR for i in range(20 - floor(percentage / 5)))
+            Config.FINISHED_PROGRESS_STR for _ in range(floor(percentage / 5))
+        ),
+        "".join(
+            Config.UNFINISHED_PROGRESS_STR
+            for _ in range(20 - floor(percentage / 5))
         ),
     )

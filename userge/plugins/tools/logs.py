@@ -53,9 +53,7 @@ async def check_logs(message: Message):
             with open("logs/userge.log", "r") as d_f:
                 text = d_f.read()
             async with aiohttp.ClientSession() as ses:
-                async with ses.post(
-                    _URL + "api/documents", json={"content": text}
-                ) as resp:
+                async with ses.post(f"{_URL}api/documents", json={"content": text}) as resp:
                     if resp.status == 201:
                         try:
                             response = await resp.json()

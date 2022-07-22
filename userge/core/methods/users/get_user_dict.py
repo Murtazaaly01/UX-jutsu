@@ -36,12 +36,12 @@ class GetUserDict(RawClient):  # pylint: disable=missing-class-docstring
         lname = (user_obj.last_name or '').strip()
         username = (user_obj.username or '').strip()
         if fname and lname:
-            full_name = fname + ' ' + lname
+            full_name = f'{fname} {lname}'
         elif fname or lname:
             full_name = fname or lname
         else:
             full_name = "user"
-        mention = mention_html(user_obj.id, "@" + username if username else full_name)
+        mention = mention_html(user_obj.id, f"@{username}" if username else full_name)
         out = {'id': user_obj.id, 'fname': fname, 'lname': lname,
                 'flname': full_name, 'uname': username, 'mention': mention}
         return AttributeDict(out) if attr_dict else out

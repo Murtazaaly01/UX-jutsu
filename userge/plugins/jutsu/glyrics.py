@@ -49,12 +49,12 @@ async def lyrics(message: Message):
     if "-s" in flag:
         songs = genius.search_songs(song)
         await message.edit(f"Searching songs matching <b>{song}</b>...")
-        number = 0
-        s_list = []
         hits = songs["hits"]
-        for one in hits:
-            s_list.append(f'• <code>{hits[number]["result"]["full_title"]}</code>')
-            number += 1
+        s_list = [
+            f'• <code>{hits[number]["result"]["full_title"]}</code>'
+            for number, one in enumerate(hits)
+        ]
+
         s_list = "\n".join(s_list)
         await message.edit(f"Songs matching [<b>{song}</b>]:\n\n" f"{s_list}")
         return
@@ -65,10 +65,7 @@ async def lyrics(message: Message):
         artist = capitaled(artist)
     song = song.strip()
     song = capitaled(song)
-    if artist == "":
-        title = song
-    else:
-        title = f"{artist} - {song}"
+    title = song if artist == "" else f"{artist} - {song}"
     await message.edit(f"Searching lyrics for **{title}** on Genius...`")
     dis_pre = False
     try:

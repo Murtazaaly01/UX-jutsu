@@ -29,7 +29,7 @@ async def _init() -> None:
             )
             await CHANNEL.log(f"Update/restart time - <b>{took_time}</b>")
         except BaseException:
-            await CHANNEL.log(f"`### UX-jutsu updated/restarted successfully. ###`")
+            await CHANNEL.log("`### UX-jutsu updated/restarted successfully. ###`")
         await UPDATE.drop()
     elif restart:
         try:
@@ -46,12 +46,12 @@ async def _init() -> None:
 
 
 class Start:
-    async def save_msg(message: Message, text: str) -> None:
+    async def save_msg(self, text: str) -> None:
         await RESTART_MESSAGE.insert_one(
             {
                 "_id": "RESTART_MSG",
-                "chat_id": message.chat.id,
-                "message_id": message.message_id,
+                "chat_id": self.chat.id,
+                "message_id": self.message_id,
                 "text": text,
             }
         )

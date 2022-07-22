@@ -51,9 +51,7 @@ async def notice_(_, c_q: CallbackQuery):
             except BaseException:
                 users_ = []
                 seen_by = []
-            if user_ in users_:
-                pass
-            else:
+            if user_ not in users_:
                 users_.append(user_)
                 seen_by.append((await userge.get_users(user_)).first_name)
             await SEEN_BY.update_one(
@@ -82,19 +80,18 @@ async def notice_(_, c_q: CallbackQuery):
                 )
             except MessageNotModified:
                 pass
+        elif user_ in Config.OWNER_ID or user_ in Config.TRUSTED_SUDO_USERS:
+            users_ = found["seen"]
+            seen_by = found["user_first_names"]
+            list_ = f"Notice seen by: [{len(users_)}]\n\n"
+            for one in seen_by:
+                list_ += f"• {one}\n"
+            await c_q.answer(list_, show_alert=True)
         else:
-            if user_ not in Config.OWNER_ID and user_ not in Config.TRUSTED_SUDO_USERS:
-                await c_q.answer(
-                    "Only owner or trusted sudo users can see this list.",
-                    show_alert=True,
-                )
-            else:
-                users_ = found["seen"]
-                seen_by = found["user_first_names"]
-                list_ = f"Notice seen by: [{len(users_)}]\n\n"
-                for one in seen_by:
-                    list_ += f"• {one}\n"
-                await c_q.answer(list_, show_alert=True)
+            await c_q.answer(
+                "Only owner or trusted sudo users can see this list.",
+                show_alert=True,
+            )
     except BaseException:
         tb = traceback.format_exc()
         await userge.send_message(Config.LOG_CHANNEL_ID, f"#ATTENTION\n\n```{tb}```")

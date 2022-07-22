@@ -38,5 +38,4 @@ def text_giz(input_text: str) -> str:
     )
     soup = bs4.BeautifulSoup(soup_input, "lxml")
     giz = soup.find_all(text=True)
-    giz_text = giz[37].strip("\r\n")  # Hacky, but consistent.
-    return giz_text
+    return giz[37].strip("\r\n")

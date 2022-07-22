@@ -35,10 +35,7 @@ _types = [
 def _get_chat_lock(
     message: Message, lock_type: str, should_lock: bool
 ) -> Sequence[str]:
-    if should_lock is True:
-        lock = False
-    else:
-        lock = True
+    lock = not should_lock
     msg = message.chat.permissions.can_send_messages
     media = message.chat.permissions.can_send_media_messages
     stickers = message.chat.permissions.can_send_stickers
@@ -52,39 +49,39 @@ def _get_chat_lock(
     pin = message.chat.permissions.can_pin_messages
     perm = None
 
-    if lock_type == "msg":
-        msg = lock
-        perm = "messages"
-    elif lock_type == "media":
-        media = lock
-        perm = "audios, documents, photos, videos, video notes, voice notes"
-    elif lock_type == "stickers":
-        stickers = lock
-        perm = "stickers"
-    elif lock_type == "animations":
+    if lock_type == "animations":
         animations = lock
         perm = "animations"
     elif lock_type == "games":
         games = lock
         perm = "games"
-    elif lock_type == "inlinebots":
-        inlinebots = lock
-        perm = "inline bots"
-    elif lock_type == "webprev":
-        webprev = lock
-        perm = "web page previews"
-    elif lock_type == "polls":
-        polls = lock
-        perm = "polls"
     elif lock_type == "info":
         info = lock
         perm = "info"
+    elif lock_type == "inlinebots":
+        inlinebots = lock
+        perm = "inline bots"
     elif lock_type == "invite":
         invite = lock
         perm = "invite"
+    elif lock_type == "media":
+        media = lock
+        perm = "audios, documents, photos, videos, video notes, voice notes"
+    elif lock_type == "msg":
+        msg = lock
+        perm = "messages"
     elif lock_type == "pin":
         pin = lock
         perm = "pin"
+    elif lock_type == "polls":
+        polls = lock
+        perm = "polls"
+    elif lock_type == "stickers":
+        stickers = lock
+        perm = "stickers"
+    elif lock_type == "webprev":
+        webprev = lock
+        perm = "web page previews"
     return (
         msg,
         media,
@@ -332,8 +329,7 @@ async def view_perm(message: Message):
     vinfo = convert_to_emoji(message.chat.permissions.can_change_info)
     vinvite = convert_to_emoji(message.chat.permissions.can_invite_users)
     vpin = convert_to_emoji(message.chat.permissions.can_pin_messages)
-    permission_view_str = ""
-    permission_view_str += "<b>CHAT PERMISSION INFO:</b>\n\n"
+    permission_view_str = "" + "<b>CHAT PERMISSION INFO:</b>\n\n"
     permission_view_str += f"<b>📩 Send Messages:</b> {vmsg}\n"
     permission_view_str += f"<b>🎭 Send Media:</b> {vmedia}\n"
     permission_view_str += f"<b>🎴 Send Stickers:</b> {vstickers}\n"

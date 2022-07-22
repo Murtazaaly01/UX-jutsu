@@ -29,7 +29,7 @@ async def kek_(message: Message):
     kek = ["/", "\\"]
     for i in range(1, 9):
         time.sleep(0.3)
-        await message.try_to_edit(":" + kek[i % 2])
+        await message.try_to_edit(f":{kek[i % 2]}")
 
 
 @userge.on_cmd(
@@ -45,7 +45,7 @@ async def lol_(message: Message):
     for i in range(9):
         if i % 3 == 0:
             lol = "-_ "
-        lol = lol[:-1] + "_-"
+        lol = f"{lol[:-1]}_-"
         await message.try_to_edit(lol, parse_mode="html")
 
 
@@ -62,7 +62,7 @@ async def fun_(message: Message):
     for i in range(9):
         if i % 3 == 0:
             fun = ";_ "
-        fun = fun[:-1] + "_;"
+        fun = f"{fun[:-1]}_;"
         await message.try_to_edit(fun, parse_mode="html")
 
 
@@ -71,7 +71,7 @@ async def Oof_(message: Message):
     """Oof"""
     Oof = "Oo "
     for _ in range(6):
-        Oof = Oof[:-1] + "of"
+        Oof = f"{Oof[:-1]}of"
         await message.try_to_edit(Oof)
 
 
@@ -80,13 +80,12 @@ async def Hmm_(message: Message):
     """Hmm"""
     Hmm = "Hm "
     for _ in range(4):
-        Hmm = Hmm[:-1] + "mm"
+        Hmm = f"{Hmm[:-1]}mm"
         await message.try_to_edit(Hmm)
 
 
 async def check_and_send(message: Message, *args, **kwargs):
-    replied = message.reply_to_message
-    if replied:
+    if replied := message.reply_to_message:
         await asyncio.gather(message.delete(), replied.reply(*args, **kwargs))
     else:
         await message.edit(*args, **kwargs)
@@ -119,31 +118,18 @@ async def insult_(message: Message):
 )
 async def hi_(message: Message):
     """hi"""
-    input_str = message.input_str
-    if not input_str:
-        await message.edit(choice(HELLOSTR), parse_mode="html")
-    else:
+    if input_str := message.input_str:
         args = input_str.split()
         if len(args) == 2:
             paytext, filler = args
         else:
             paytext = args[0]
             filler = choice(EMOJIS)
-        pay = "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}".format(
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 4,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 4,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2,
-            paytext * 8 + filler * 2 + paytext * 2,
-            paytext * 8 + filler * 2 + paytext * 2,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2,
-            paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2,
-        )
+        pay = f"{paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 4}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 4}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2}\n{paytext * 8 + filler * 2 + paytext * 2}\n{paytext * 8 + filler * 2 + paytext * 2}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2}\n{paytext * 2 + filler * 4 + paytext * 2 + filler * 2 + paytext * 2}"
+
         await message.edit(pay)
+    else:
+        await message.edit(choice(HELLOSTR), parse_mode="html")
 
 
 @userge.on_cmd(
@@ -269,20 +255,8 @@ async def bluetext(message: Message):
 async def payf_(message: Message):
     """payf"""
     paytext = message.input_str
-    pay = "{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}\n{}".format(
-        paytext * 8,
-        paytext * 8,
-        paytext * 2,
-        paytext * 2,
-        paytext * 2,
-        paytext * 6,
-        paytext * 6,
-        paytext * 2,
-        paytext * 2,
-        paytext * 2,
-        paytext * 2,
-        paytext * 2,
-    )
+    pay = f"{paytext * 8}\n{paytext * 8}\n{paytext * 2}\n{paytext * 2}\n{paytext * 2}\n{paytext * 6}\n{paytext * 6}\n{paytext * 2}\n{paytext * 2}\n{paytext * 2}\n{paytext * 2}\n{paytext * 2}"
+
     await message.edit(pay)
 
 
@@ -533,9 +507,9 @@ async def owo_(message: Message):
     reply_text = sub(r"(R|L)", "W", reply_text)
     reply_text = sub(r"n([aeiou])", r"ny\1", reply_text)
     reply_text = sub(r"N([aeiouAEIOU])", r"Ny\1", reply_text)
-    reply_text = sub(r"\!+", " " + choice(UWUS), reply_text)
+    reply_text = sub(r"\!+", f" {choice(UWUS)}", reply_text)
     reply_text = reply_text.replace("ove", "uv")
-    reply_text += " " + choice(UWUS)
+    reply_text += f" {choice(UWUS)}"
     await message.edit(reply_text)
 
 

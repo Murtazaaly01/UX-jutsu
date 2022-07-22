@@ -111,8 +111,7 @@ class Message(RawMessage):
     @property
     def replied(self):
         """ Return reply_to_message"""
-        _replied = self.reply_to_message
-        return _replied
+        return self.reply_to_message
 
     @property
     def process_is_canceled(self) -> bool:
@@ -175,13 +174,12 @@ class Message(RawMessage):
         for n in input_str.strip().splitlines():
             line_ = ""
             for i in n.split(' '):
-                match = re.match(f"({prefix}[a-zA-Z]+)([0-9]*)$", i)
-                if match:
+                if match := re.match(f"({prefix}[a-zA-Z]+)([0-9]*)$", i):
                     items: Sequence[str] = match.groups()
                     self._flags[items[0].lstrip(prefix).lower() if del_pre
                                 else items[0].lower()] = items[1] or ''
                 else:
-                    line_ += i + ' '
+                    line_ += f'{i} '
             self._filtered_input_str += "\n" + line_
         self._filtered_input_str = self._filtered_input_str.strip()
         _LOG.debug(
@@ -209,7 +207,7 @@ class Message(RawMessage):
         c_id = split_link[-2]
         m_id = split_link[-1]
         if c_id.isdigit() and len(c_id) == 10:
-            c_id = int("-100" + c_id)
+            c_id = int(f"-100{c_id}")
         protected_content = await self._client.get_messages(c_id, int(m_id))
         return await protected_content.copy(chat_id, reply_to_message_id=reply_to_message_id)
 

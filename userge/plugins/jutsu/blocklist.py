@@ -90,10 +90,7 @@ async def bl_ock(message: Message):
         block_tog = True
     flags = message.flags
     if "-c" in flags:
-        if block_tog:
-            switch = "enabled"
-        else:
-            switch = "disabled"
+        switch = "enabled" if block_tog else "disabled"
         return await message.edit(f"`BLOCKLIST is {switch}.`", del_in=5)
     if block_tog:
         await BLOCKED.update_one(

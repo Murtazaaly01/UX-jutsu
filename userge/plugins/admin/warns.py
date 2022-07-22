@@ -275,12 +275,10 @@ async def maxwarns(message: Message):
 )
 async def chat_rules(message: Message):
     """add chat rules"""
-    content = message.input_str
     reply = message.reply_to_message
-    if reply and reply.text:
-        content = reply.text.html
-    content = "{}".format(content or "")
-    if not (content or (reply and reply.media)):
+    content = reply.text.html if reply and reply.text else message.input_str
+    content = f'{content or ""}'
+    if not content and (not reply or not reply.media):
         await message.err("No Content Found!")
         return
     mid = await CHANNEL.store(reply, content)
@@ -372,9 +370,7 @@ async def totalwarns(message: Message):
 
     count = 0
     found = await WARN_DATA.find_one({"chat_id": message.chat.id})
-    max_warns = 3
-    if found:
-        max_warns = found.get("max_warns", 3)
+    max_warns = found.get("max_warns", 3) if found else 3
     warns_ = ""
     async for warn in WARNS_DB.find(
         {"chat_id": message.chat.id, "user_id": warn_user.id}

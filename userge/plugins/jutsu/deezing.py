@@ -43,8 +43,9 @@ async def deezing_(message: Message):
         log_send = await userge.send_inline_bot_result(
             chat_id=Config.LOG_CHANNEL_ID,
             query_id=results.query_id,
-            result_id=results.results[int(num)].id,
+            result_id=results.results[num].id,
         )
+
         await gather(
             userge.copy_message(
                 chat_id=message.chat.id,
@@ -86,7 +87,7 @@ async def dlist_(message: Message):
         return
     list_ = []
     total_ = 0
-    for one in range(0, 10):
+    for one in range(10):
         try:
             title_ = result.results[one].document.attributes[1].file_name
             dure_ = result.results[one].document.attributes[0].duration

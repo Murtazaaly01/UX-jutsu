@@ -23,8 +23,7 @@ def capitaled(query: str):
     for word_ in query_split:
         word_cap = word_.capitalize()
         cap_text.append(word_cap)
-    cap_query = " ".join(cap_text)
-    return cap_query
+    return " ".join(cap_text)
 
 
 # to report for spam or pornographic content
@@ -89,10 +88,7 @@ def time_date_diff(year: int, month: int, date: int, hour: int, minute: int, dif
                 elif month == (11 or 9 or 6 or 4):
                     date = 30
                 else:
-                    if year % 4 == 0:
-                        date = 29
-                    else:
-                        date = 28
+                    date = 29 if year % 4 == 0 else 28
         else:
             minute += min_diff
             if minute >= 60:
@@ -108,7 +104,7 @@ def time_date_diff(year: int, month: int, date: int, hour: int, minute: int, dif
                 hour -= 24
                 date += 1
                 ts = "AM"
-            if date > 30 and (month == 4 or month == 6 or month == 9 or month == 11):
+            if date > 30 and month in {4, 6, 9, 11}:
                 month += 1
                 date -= 30
             elif date > 28 and month == 2 and year % 4 != 0:
@@ -117,15 +113,7 @@ def time_date_diff(year: int, month: int, date: int, hour: int, minute: int, dif
             elif date > 29 and month == 2 and year % 4 == 0:
                 month += 1
                 date -= 29
-            elif date > 31 and (
-                month == 1
-                or month == 3
-                or month == 5
-                or month == 7
-                or month == 8
-                or month == 10
-                or month == 12
-            ):
+            elif date > 31 and month in {1, 3, 5, 7, 8, 10, 12}:
                 month += 1
                 date -= 31
                 if month > 12:
@@ -135,7 +123,7 @@ def time_date_diff(year: int, month: int, date: int, hour: int, minute: int, dif
         minute = f"{minute:02}"
         date = f"{date:02}"
         month = f"{month:02}"
-        json_ = {
+        return {
             "hour": hour,
             "min": minute,
             "stamp": ts,
@@ -143,17 +131,16 @@ def time_date_diff(year: int, month: int, date: int, hour: int, minute: int, dif
             "month": month,
             "year": year,
         }
-        return json_
+
     except Exception as e:
         return e
 
     
 async def admin_or_creator(chat_id: int, user_id: int) -> dict:
     check_status = await userge.get_chat_member(chat_id, user_id)
-    admin_ = True if check_status.status == "administrator" else False
-    creator_ = True if check_status.status == "creator" else False
-    json_ = {"is_admin": admin_, "is_creator": creator_}
-    return json_
+    admin_ = check_status.status == "administrator"
+    creator_ = check_status.status == "creator"
+    return {"is_admin": admin_, "is_creator": creator_}
 
 
 async def admin_chats(user_id: int) -> dict:
@@ -162,7 +149,6 @@ async def admin_chats(user_id: int) -> dict:
         user_ = await userge.get_users(user_id)
     except:
         raise
-        return
     async for dialog in userge.iter_dialogs():
         if dialog.chat.type in ["group", "supergroup", "channel"]:
             try:
@@ -199,17 +185,14 @@ async def get_response(msg, filter_user: Union[int, str] = 0, timeout: int = 5, 
             response = await userge.get_messages(msg.chat.id, msg_id)
         except:
             raise "No response found."
-        if response.reply_to_message.message_id == msg.message_id:
-            if filter_user:
-                if response.from_user.id == user_.id:
-                    if mark_read:
-                        await userge.send_read_acknowledge(msg.chat.id, response)
-                    return response
-            else:
-                if mark_read:
-                    await userge.send_read_acknowledge(msg.chat.id, response)
-                return response
-        
+        if response.reply_to_message.message_id == msg.message_id and (
+            filter_user
+            and response.from_user.id == user_.id
+            or not filter_user
+        ):
+            if mark_read:
+                await userge.send_read_acknowledge(msg.chat.id, response)
+            return response
     raise "No response found in time limit."
 
 
@@ -255,10 +238,7 @@ def extract_id(mention):
         men = mention.html
     except:
         return "Input is not a mention."
-    filter = re.search(r"\d+", men)
-    if filter: 
-        return filter.group(0)
-    return "ID not found."
+    return filter[0] if (filter := re.search(r"\d+", men)) else "ID not found."
 
 
 async def get_profile_pic(user_: Union[int, str]):
@@ -274,10 +254,10 @@ async def get_profile_pic(user_: Union[int, str]):
 
 
 class Media_Info:
-    def data(media: str) -> dict:
+    def data(self) -> dict:
         "Get downloaded media's information"
         found = False
-        media_info = MediaInfo.parse(media)
+        media_info = MediaInfo.parse(self)
         for track in media_info.tracks:
             if track.track_type == "Video":
                 found = True
@@ -296,20 +276,23 @@ class Media_Info:
                 other_media_size_ = track.other_stream_size
                 media_size_2 = [other_media_size_[1], other_media_size_[2], other_media_size_[3], other_media_size_[4]] if other_media_size_ else None
 
-        dict_ = {
-            "media_type": type_,
-            "format": format_,
-            "duration_in_ms": duration_1,
-            "duration": duration_2,
-            "pixel_sizes": pixel_ratio_,
-            "aspect_ratio_in_fraction": aspect_ratio_1,
-            "aspect_ratio": aspect_ratio_2,
-            "frame_rate": fps_,
-            "frame_count": fc_,
-            "file_size_in_bytes": media_size_1,
-            "file_size": media_size_2
-        } if found else None
-        return dict_
+        return (
+            {
+                "media_type": type_,
+                "format": format_,
+                "duration_in_ms": duration_1,
+                "duration": duration_2,
+                "pixel_sizes": pixel_ratio_,
+                "aspect_ratio_in_fraction": aspect_ratio_1,
+                "aspect_ratio": aspect_ratio_2,
+                "frame_rate": fps_,
+                "frame_count": fc_,
+                "file_size_in_bytes": media_size_1,
+                "file_size": media_size_2,
+            }
+            if found
+            else None
+        )
 
 
 def current_time(hour_diff: float) -> dict:
@@ -328,15 +311,7 @@ def current_time(hour_diff: float) -> dict:
         minutes_ -= 60
     if hour_ > 23:
         hour_ -= 24
-    if hour_ < 12:
-        stamp_ = "AM"
-    else:
-        stamp_ = "PM"
+    stamp_ = "AM" if hour_ < 12 else "PM"
     minutes_ = f"{minutes_:02}"
     hour_ = f"{hour_:02}"
-    time_dict = {
-        "H": hour_,
-        "M": minutes_,
-        "STAMP": stamp_
-    }
-    return time_dict
+    return {"H": hour_, "M": minutes_, "STAMP": stamp_}

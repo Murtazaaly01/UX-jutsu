@@ -31,8 +31,7 @@ async def pronun_(message: Message):
     flags = message.flags
     query_ = message.filtered_input_str
     if not query_:
-        reply_ = message.reply_to_message
-        if reply_:
+        if reply_ := message.reply_to_message:
             query_ = reply_.text or reply_.caption
         else:
             await message.err("`No input found...`", del_in=5)
@@ -61,18 +60,17 @@ async def pronun_(message: Message):
                 return
         else:
             no_f = True
+    elif len(flags) > 2:
+        await message.edit("`Maximum two language flags supported...`", del_in=5)
+        return
+    elif len(flags) == 2:
+        src = list(flags)[0]
+        dest = list(flags)[1]
+    elif len(flags) == 1:
+        src = "auto"
+        dest = list(flags)[0]
     else:
-        if len(flags) > 2:
-            await message.edit("`Maximum two language flags supported...`", del_in=5)
-            return
-        elif len(flags) == 2:
-            src = list(flags)[0]
-            dest = list(flags)[1]
-        elif len(flags) == 1:
-            src = "auto"
-            dest = list(flags)[0]
-        else:
-            no_f = True
+        no_f = True
     if no_f:
         await message.edit("`Need a language flag to work or use translate plugin...`")
         return
@@ -98,10 +96,12 @@ async def pronun_(message: Message):
     if not pronun:
         pronun = trans.text
         success = False
-    if not success:
-        line_ = f"Translated text to <b>{lang_dest}</b>:"
-    else:
-        line_ = f"Pronunciation in <b>{lang_dest}</b>:"
+    line_ = (
+        f"Pronunciation in <b>{lang_dest}</b>:"
+        if success
+        else f"Translated text to <b>{lang_dest}</b>:"
+    )
+
     if not secret:
         out_ += (
             f"Original text from <b>{lang_src}</b>:\n"

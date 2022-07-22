@@ -50,27 +50,42 @@ class Command(Filter):
         filters_ = filters.regex(pattern=pattern)
         if filter_me:
             outgoing_flt = filters.create(
-                lambda _, __, m:
-                m.via_bot is None
+                lambda _, __, m: m.via_bot is None
                 and not m.scheduled
-                and not (m.forward_from or m.forward_sender_name)
-                and not (m.from_user and m.from_user.is_bot)
-                and (m.outgoing or (m.from_user and m.from_user.is_self))
-                and not (m.chat and m.chat.type == "channel" and m.edit_date)
-                and (m.text and m.text.startswith(trigger) if trigger else True))
+                and not m.forward_from
+                and not m.forward_sender_name
+                and (not m.from_user or not m.from_user.is_bot)
+                and ((m.outgoing or (m.from_user and m.from_user.is_self)))
+                and (not m.chat or m.chat.type != "channel" or not m.edit_date)
+                and (m.text and m.text.startswith(trigger) if trigger else True)
+            )
+
             incoming_flt = filters.create(
-                lambda _, __, m:
-                m.via_bot is None
+                lambda _, __, m: m.via_bot is None
                 and not m.outgoing
                 and trigger
                 and not m.scheduled
-                and not (m.forward_from or m.forward_sender_name)
-                and m.from_user and m.text
-                and ((m.from_user.id in Config.OWNER_ID)
-                     or (Config.SUDO_ENABLED and (m.from_user.id in Config.SUDO_USERS)
-                         and (cname.lstrip(trigger) in Config.ALLOWED_COMMANDS))
-                         or (Config.SUDO_ENABLED and (m.from_user.id in Config.TRUSTED_SUDO_USERS)))
-                and m.text.startswith(Config.SUDO_TRIGGER))
+                and not m.forward_from
+                and not m.forward_sender_name
+                and m.from_user
+                and m.text
+                and (
+                    (
+                        (m.from_user.id in Config.OWNER_ID)
+                        or (
+                            Config.SUDO_ENABLED
+                            and (m.from_user.id in Config.SUDO_USERS)
+                            and (cname.lstrip(trigger) in Config.ALLOWED_COMMANDS)
+                        )
+                        or (
+                            Config.SUDO_ENABLED
+                            and (m.from_user.id in Config.TRUSTED_SUDO_USERS)
+                        )
+                    )
+                )
+                and m.text.startswith(Config.SUDO_TRIGGER)
+            )
+
             no_react_flt = filters.create(
                 lambda _, __, m:
                 m.reactions is None

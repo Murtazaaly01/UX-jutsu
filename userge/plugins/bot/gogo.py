@@ -25,7 +25,7 @@ async def gogo_h(message: Message):
     if not userge.has_bot:
         await message.err("You Need to create a bot via Bot Father", del_in=5)
         return
-    link_ = "https://t.me/{}?start=inline".format((await userge.bot.get_me()).username)
+    link_ = f"https://t.me/{(await userge.bot.get_me()).username}?start=inline"
     if message.client.is_bot:
         await userge.bot.send_message(
             message.chat.id,
@@ -37,7 +37,7 @@ async def gogo_h(message: Message):
         await message.delete()
     else:
         await message.edit(
-            "[**See Help for Anime**]({})".format(link_), disable_web_page_preview=True
+            f"[**See Help for Anime**]({link_})", disable_web_page_preview=True
         )
 
 
@@ -51,7 +51,7 @@ class Anime:
 
     @staticmethod
     async def search(query: str):
-        page = await Anime._get_html("/search.html?keyword=" + quote(query))
+        page = await Anime._get_html(f"/search.html?keyword={quote(query)}")
         out = []
         for i in page.find("ul", {"class": "items"}).findAll("li"):
             result_ = i.find("p", {"class": "name"})
@@ -78,13 +78,15 @@ class Anime:
     @staticmethod
     async def get_eps(link: str):
         page = await Anime._get_html(link, add_pre=False)
-        end_ = page.find("ul", {"id": "episode_page"}).findAll("li")[-1].a.get("ep_end")
-        return end_
+        return (
+            page.find("ul", {"id": "episode_page"})
+            .findAll("li")[-1]
+            .a.get("ep_end")
+        )
 
     @staticmethod
     def _get_name(link: str):
-        name_ = "/" + (link.rsplit("/", 1))[1]
-        return name_
+        return "/" + (link.rsplit("/", 1))[1]
 
     @staticmethod
     async def get_quality(url: str, episode: int, key_: str):
@@ -126,9 +128,10 @@ if userge.has_bot:
         for i in range(1, int(res) + 1):
             btn_.append(
                 InlineKeyboardButton(
-                    "EP " + str(i), callback_data=f"gogo_get_qual{key_}_{i}"
+                    f"EP {str(i)}", callback_data=f"gogo_get_qual{key_}_{i}"
                 )
             )
+
             if len(btn_) == 4:
                 row_.append(btn_)
                 btn_ = []
@@ -145,11 +148,14 @@ if userge.has_bot:
             paginate[0].append(
                 [
                     InlineKeyboardButton(
-                        "1 / " + str(p_len), callback_data=f"gogo_page{key_}_0"
+                        f"1 / {p_len}", callback_data=f"gogo_page{key_}_0"
                     ),
-                    InlineKeyboardButton("Next", callback_data=f"gogo_next{key_}_0"),
+                    InlineKeyboardButton(
+                        "Next", callback_data=f"gogo_next{key_}_0"
+                    ),
                 ]
             )
+
         GOGO_DB[key_]["current_pg"] = paginate[0]
         await c_q.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(paginate[0])
@@ -189,12 +195,12 @@ if userge.has_bot:
         pages = key_data.get("page")
         p_len = len(pages)
         del_back, del_next = False, False
-        if direction == "next":
-            page = pos + 1
-            del_next = (page + 1) == p_len
-        elif direction == "back":
+        if direction == "back":
             del_back = pos == 1
             page = pos - 1
+        elif direction == "next":
+            page = pos + 1
+            del_next = (page + 1) == p_len
         else:
             return
         button_base = [

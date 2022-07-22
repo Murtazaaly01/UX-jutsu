@@ -78,5 +78,5 @@ async def gen_meme(message: Message):
         chat_id=message.chat.id, photo=meme_image, reply_to_message_id=reply_id
     )
     await CHANNEL.log(
-        "**name** : {}\n**image** : {}".format(meme_choice["name"], meme_image)
+        f'**name** : {meme_choice["name"]}\n**image** : {meme_image}'
     )

@@ -91,17 +91,20 @@ async def carbon_(message: Message):
             response = await conv.get_response(mark_read=True)
             while not response.media:
                 response = await conv.get_response(mark_read=True)
-            caption = "\n".join(response.caption.split("\n")[0:2])
+            caption = "\n".join(response.caption.split("\n")[:2])
             file_id = response.document.file_id
             await asyncio.gather(
                 message.delete(),
                 userge.send_document(
                     chat_id=message.chat.id,
                     document=file_id,
-                    caption="`" + caption + "`",
-                    reply_to_message_id=replied.message_id if replied else None,
+                    caption=f"`{caption}`",
+                    reply_to_message_id=replied.message_id
+                    if replied
+                    else None,
                 ),
             )
+
     else:
         input_str = message.filtered_input_str
         theme = "seti"
